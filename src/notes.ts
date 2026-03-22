@@ -85,8 +85,6 @@ export function getNoteContent(identifier: string): BearNote | null {
   const db = openBearDatabase();
 
   try {
-    logger.debug(`Fetching the note content from the database, note identifier: ${identifier}`);
-
     // Query with file content - always includes OCR'd text from attached files with clear labeling
     const query = `
       SELECT note.ZTITLE as title,
@@ -284,8 +282,6 @@ export function searchNotes(
       LIMIT ?`;
     queryParams.push(queryLimit);
 
-    logger.debug(`Executing search query with ${queryParams.length} parameters`);
-
     // Use parameter binding to prevent SQL injection attacks
     const stmt = db.prepare(query);
     const rows = stmt.all(...queryParams);
@@ -372,6 +368,89 @@ export function getNoteRaw(identifier: string): { text: string | null; trashed: 
 }
 
 /**
+ * Checks whether a note is archived.
+ * Queries without filtering on ZARCHIVED so it can see archived notes.
+ */
+export function isNoteArchived(identifier: string): boolean | null {
+  const db = openBearDatabase();
+
+  try {
+    const stmt = db.prepare(`
+      SELECT ZARCHIVED as archived
+      FROM ZSFNOTE
+      WHERE ZUNIQUEIDENTIFIER = ?
+        AND ZENCRYPTED = 0
+    `);
+
+    const row = stmt.get(identifier) as { archived: number } | undefined;
+    if (!row) return null;
+
+    return row.archived === 1;
+  } catch (error) {
+    logger.error(`isNoteArchived failed for ${identifier}: ${error}`);
+    return null;
+  } finally {
+    closeBearDatabase(db);
+  }
+}
+
+/**
+ * Checks whether a file attachment exists on a note.
+ * Used to verify bear-add-file actually landed in the database.
+ */
+export function noteFileExists(noteIdentifier: string, filename: string): boolean {
+  const db = openBearDatabase();
+
+  try {
+    const stmt = db.prepare(`
+      SELECT 1
+      FROM ZSFNOTEFILE f
+      JOIN ZSFNOTE note ON note.Z_PK = f.ZNOTE
+      WHERE note.ZUNIQUEIDENTIFIER = ?
+        AND f.ZFILENAME = ?
+        AND note.ZENCRYPTED = 0
+    `);
+
+    const row = stmt.get(noteIdentifier, filename);
+    return row !== undefined;
+  } catch (error) {
+    logger.error(`noteFileExists failed for ${noteIdentifier}/${filename}: ${error}`);
+    return false;
+  } finally {
+    closeBearDatabase(db);
+  }
+}
+
+/**
+ * Checks whether a tag exists by name (case-insensitive, decoded).
+ * Used to verify rename-tag and delete-tag operations.
+ */
+export function tagExists(tagName: string): boolean {
+  const db = openBearDatabase();
+
+  try {
+    const normalized = tagName.trim().toLowerCase();
+    const stmt = db.prepare(`
+      SELECT 1
+      FROM ZSFNOTETAG t
+      JOIN Z_5TAGS nt ON nt.Z_13TAGS = t.Z_PK
+      JOIN ZSFNOTE note ON note.Z_PK = nt.Z_5NOTES
+        AND note.ZTRASHED = 0
+        AND note.ZARCHIVED = 0
+      WHERE LOWER(TRIM(REPLACE(t.ZTITLE, '+', ' '))) = ?
+    `);
+
+    const row = stmt.get(normalized);
+    return row !== undefined;
+  } catch (error) {
+    logger.error(`tagExists failed for "${tagName}": ${error}`);
+    return false;
+  } finally {
+    closeBearDatabase(db);
+  }
+}
+
+/**
  * Polls Bear's SQLite database for the identifier of a recently created note.
  * Designed for use after bear-create-note fires the URL API — the note creation already
  * succeeded, so errors here degrade gracefully to null instead of throwing.
@@ -381,11 +460,8 @@ export function getNoteRaw(identifier: string): { text: string | null; trashed: 
  */
 export async function awaitNoteCreation(title: string): Promise<string | null> {
   if (!title?.trim()) {
-    logger.debug('awaitNoteCreation: skipped — no title provided');
     return null;
   }
-
-  logger.debug(`awaitNoteCreation: polling for note "${title}"`);
 
   const sinceTimestamp = convertDateToCoreDataTimestamp(
     new Date(Date.now() - CREATION_LOOKBACK_MS)
@@ -409,7 +485,6 @@ export async function awaitNoteCreation(title: string): Promise<string | null> {
     while (Date.now() < deadline) {
       const row = stmt.get(title, sinceTimestamp) as { identifier: string } | undefined;
       if (row) {
-        logger.debug(`awaitNoteCreation: found note "${title}"`);
         return row.identifier;
       }
       await setTimeout(POLL_INTERVAL_MS);

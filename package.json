@@ -59,12 +59,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vasylenko/claude-desktop-extension-bear-notes.git"
+    "url": "git+https://github.com/heyn8k/claude-desktop-extension-bear-notes.git"
   },
   "bugs": {
-    "url": "https://github.com/vasylenko/claude-desktop-extension-bear-notes/issues"
+    "url": "https://github.com/heyn8k/claude-desktop-extension-bear-notes/issues"
   },
-  "homepage": "https://github.com/vasylenko/claude-desktop-extension-bear-notes#readme",
+  "homepage": "https://github.com/heyn8k/claude-desktop-extension-bear-notes#readme",
   "bin": {
     "bear-notes-mcp": "dist/main.js"
   },

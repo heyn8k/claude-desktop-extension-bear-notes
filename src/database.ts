@@ -10,7 +10,6 @@ function getBearDatabasePath(): string {
   // Environment override for testing
   const envPath = process.env.BEAR_DB_PATH;
   if (envPath) {
-    logger.debug(`Using environment override database path: ${envPath}`);
     return envPath;
   }
 
@@ -21,7 +20,6 @@ function getBearDatabasePath(): string {
     logAndThrow(`Database error: ${ERROR_MESSAGES.BEAR_DATABASE_NOT_FOUND}`);
   }
 
-  logger.debug(`Using default Bear database path: ${defaultPath}`);
   return defaultPath;
 }
 
@@ -32,7 +30,6 @@ function getBearDatabasePath(): string {
 export function closeBearDatabase(db: DatabaseSync): void {
   try {
     db.close();
-    logger.debug('Database connection closed');
   } catch (closeError) {
     logger.error(`Failed to close database connection: ${closeError}`);
   }
@@ -51,7 +48,6 @@ export function openBearDatabase(): DatabaseSync {
   try {
     const db = new DatabaseSync(databasePath, { readOnly: true });
 
-    logger.debug('Bear database opened successfully');
     return db;
   } catch (error) {
     logger.error(`Failed to open Bear database: ${error}`);

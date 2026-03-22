@@ -32,8 +32,6 @@ export interface BearUrlParams {
  * @returns Properly encoded x-callback-url string
  */
 export function buildBearUrl(action: string, params: BearUrlParams = {}): string {
-  logger.debug(`Building Bear URL for action: ${action}`);
-
   if (!action || typeof action !== 'string' || !action.trim()) {
     logAndThrow('Bear URL error: Action parameter is required and must be a non-empty string');
   }
@@ -77,8 +75,6 @@ export function buildBearUrl(action: string, params: BearUrlParams = {}): string
   const queryString = urlParams.toString().replace(/\+/g, '%20');
   const finalUrl = `${baseUrl}?${queryString}`;
 
-  logger.debug(`Built Bear URL: ${finalUrl}`);
-
   return finalUrl;
 }
 
@@ -91,15 +87,11 @@ export function buildBearUrl(action: string, params: BearUrlParams = {}): string
  * @throws Error if platform is not macOS or subprocess execution fails
  */
 export function executeBearXCallbackApi(url: string): Promise<void> {
-  logger.debug('Executing Bear x-callback-url');
-
   if (!url || typeof url !== 'string' || !url.trim()) {
     logAndThrow('Bear URL error: URL parameter is required and must be a non-empty string');
   }
 
   return new Promise((resolve, reject) => {
-    logger.debug('Launching Bear Notes via x-callback-url');
-
     const child = spawn('open', ['-g', url.trim()], {
       stdio: 'pipe',
       detached: false,
@@ -115,7 +107,6 @@ export function executeBearXCallbackApi(url: string): Promise<void> {
 
     child.on('close', (code) => {
       if (code === 0) {
-        logger.debug('Bear x-callback-url executed successfully');
         resolve();
       } else {
         const errorMessage = `Bear URL error: Failed to execute x-callback-url (exit code: ${code})`;

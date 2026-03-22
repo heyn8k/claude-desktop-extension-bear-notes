@@ -22,7 +22,10 @@ import {
   getNoteContent,
   getNoteRaw,
   getNoteTags,
+  isNoteArchived,
+  noteFileExists,
   searchNotes,
+  tagExists,
 } from './notes.js';
 import { findUntaggedNotes, listTags } from './tags.js';
 import { buildBearUrl, executeBearXCallbackApi } from './bear-urls.js';
@@ -42,6 +45,9 @@ const server = new McpServer(
       'To modify note content: bear-add-text inserts text without touching existing content; bear-replace-text overwrites content.',
       'When targeting a section by header, operations apply only to the direct content under that header — not nested sub-sections.',
       'To modify sub-sections, make separate calls targeting each sub-header.',
+      'Destructive operations (replace, archive, trash, tag delete, tag rename, full-note upsert) require explicit user intent — never perform these speculatively.',
+      'Always prefer note IDs over title matching. Never use title matching for destructive operations when an ID is available.',
+      'When replacing note content, read the note first to confirm you are targeting the correct note.',
     ].join('\n'),
   }
 );
@@ -148,10 +154,6 @@ server.registerTool(
     },
   },
   async ({ title, text, tags }): Promise<CallToolResult> => {
-    logger.debug(
-      `bear-create-note called with title: ${title ? '"' + title + '"' : 'none'}, text length: ${text ? text.length : 0}, tags: ${tags || 'none'}`
-    );
-
     try {
       const { text: createText, tags: createTags } = ENABLE_CHORUS_CONVENTIONS
         ? applyChorusConventions({ text, tags, title })
@@ -489,16 +491,27 @@ Use bear-search-notes to find the correct note identifier.`);
         mode: 'append',
       });
 
-      logger.debug(`Executing Bear add-file URL for: ${filename}`);
       await executeBearXCallbackApi(url);
 
       const noteIdentifier = id ? `Note ID: ${id}` : `Note title: "${title!}"`;
 
-      return createToolResponse(`File "${filename}" added successfully!
+      // Verify the file attachment landed in SQLite (only when we have the note ID)
+      if (id) {
+        const deadline = Date.now() + 2_000;
 
-${noteIdentifier}
+        while (Date.now() < deadline) {
+          if (noteFileExists(id, filename)) {
+            return createToolResponse(`File "${filename}" added (verified).\n\n${noteIdentifier}`);
+          }
+          await wait(25);
+        }
 
-The file has been attached to your Bear note.`);
+        return createToolResponse(
+          `File add command sent but verification failed — "${filename}" not yet confirmed in database.\n\n${noteIdentifier}\nCheck Bear manually.`
+        );
+      }
+
+      return createToolResponse(`File "${filename}" added.\n\n${noteIdentifier}`);
     } catch (error) {
       logger.error('bear-add-file failed:', error);
       throw error;
@@ -761,12 +774,21 @@ Use bear-search-notes to find the correct note identifier.`);
 
       await executeBearXCallbackApi(url);
 
-      return createToolResponse(`Note archived successfully!
+      // Verify the note is actually archived via SQLite
+      const deadline = Date.now() + 2_000;
 
-Note: "${existingNote.title}"
-ID: ${id}
+      while (Date.now() < deadline) {
+        if (isNoteArchived(id) === true) {
+          return createToolResponse(
+            `Note archived (verified).\n\nNote: "${existingNote.title}"\nID: ${id}`
+          );
+        }
+        await wait(25);
+      }
 
-The note has been moved to Bear's archive.`);
+      return createToolResponse(
+        `Archive command sent but verification failed — note "${existingNote.title}" may not be archived.\n\nID: ${id}\nCheck Bear manually.`
+      );
     } catch (error) {
       logger.error('bear-archive-note failed:', error);
       throw error;
@@ -817,12 +839,19 @@ server.registerTool(
 
       await executeBearXCallbackApi(url);
 
-      return createToolResponse(`Tag renamed successfully!
+      // Verify: old tag gone AND new tag present
+      const deadline = Date.now() + 2_000;
 
-From: #${name}
-To: #${new_name}
+      while (Date.now() < deadline) {
+        if (!tagExists(name) && tagExists(new_name)) {
+          return createToolResponse(`Tag renamed (verified).\n\nFrom: #${name}\nTo: #${new_name}`);
+        }
+        await wait(25);
+      }
 
-The tag has been renamed across all notes in your Bear library.`);
+      return createToolResponse(
+        `Rename command sent but verification failed — could not confirm #${name} was renamed to #${new_name}.\n\nCheck Bear manually.`
+      );
     } catch (error) {
       logger.error('bear-rename-tag failed:', error);
       throw error;
@@ -864,11 +893,19 @@ server.registerTool(
 
       await executeBearXCallbackApi(url);
 
-      return createToolResponse(`Tag deleted successfully!
+      // Verify: tag no longer exists
+      const deadline = Date.now() + 2_000;
 
-Tag: #${name}
+      while (Date.now() < deadline) {
+        if (!tagExists(name)) {
+          return createToolResponse(`Tag deleted (verified).\n\nTag: #${name}`);
+        }
+        await wait(25);
+      }
 
-The tag has been removed from all notes. The notes themselves are not affected.`);
+      return createToolResponse(
+        `Delete command sent but verification failed — #${name} may still exist.\n\nCheck Bear manually.`
+      );
     } catch (error) {
       logger.error('bear-delete-tag failed:', error);
       throw error;
@@ -1143,9 +1180,6 @@ server.registerTool(
 
 async function main(): Promise<void> {
   logger.info(`Bear Notes MCP Server initializing... Version: ${APP_VERSION}`);
-  logger.debug(`Debug logs enabled: ${logger.debug.enabled}`);
-  logger.debug(`Node.js version: ${process.version}`);
-  logger.debug(`App version: ${APP_VERSION}`);
 
   // Handle process errors
   process.on('uncaughtException', (error) => {

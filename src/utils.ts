@@ -12,17 +12,9 @@ const VERIFY_POLL_INTERVAL_MS = 25;
 const VERIFY_POLL_TIMEOUT_MS = 2_000;
 
 export const logger = {
-  debug: createDebug('bear-notes-mcp:debug'),
   info: createDebug('bear-notes-mcp:info'),
   error: createDebug('bear-notes-mcp:error'),
 };
-
-// Convert UI_DEBUG_TOGGLE boolean set from UI to DEBUG string for debug package
-// MCPB has no way to make this in one step with manifest.json
-if (process.env.UI_DEBUG_TOGGLE === 'true') {
-  process.env.DEBUG = 'bear-notes-mcp:*';
-  logger.debug.enabled = true;
-}
 
 // Always enable error and info logs
 logger.error.enabled = true;
@@ -449,7 +441,6 @@ Check the note content with bear-open-note to see available sections.`);
       // Not needed for replace modes — there's no preceding content to separate from.
       new_line: mode !== 'replace' ? 'yes' : undefined,
     });
-    logger.debug(`Executing Bear URL: ${url}`);
     await executeBearXCallbackApi(url);
 
     // Read-after-write verification — the core safety layer
