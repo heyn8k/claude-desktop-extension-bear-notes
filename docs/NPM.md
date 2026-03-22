@@ -9,7 +9,7 @@ Search, read, create, and update your Bear Notes from any AI assistant.
 - **10 MCP tools** for full Bear Notes integration
 - **OCR search** across images and PDFs attached to notes
 - **Date-based search** with relative dates ("yesterday", "last week", etc.)
-- **Configurable new note convention** for tag placement (opt-in)
+- **Chorus conventions** for structured note format with YAML frontmatter (opt-in)
 - **Content replacement** for replacing note body or specific sections (opt-in)
 - **Local-only** — no network calls, all data stays on your Mac
 
@@ -59,7 +59,7 @@ Add to your MCP configuration file:
 | Variable | Default | Description |
 |---|---|---|
 | `UI_DEBUG_TOGGLE` | `false` | Enable debug logging for troubleshooting |
-| `UI_ENABLE_NEW_NOTE_CONVENTION` | `false` | Place tags right after the note title instead of at the bottom |
+| `UI_ENABLE_CHORUS_CONVENTIONS` | `false` | Enforce Chorus note structure (YAML frontmatter, H1 heading, mirrored inline tags) on new notes |
 | `UI_ENABLE_CONTENT_REPLACEMENT` | `false` | Enable the `bear-replace-text` tool for replacing note content |
 
 Example with configuration:
@@ -70,7 +70,7 @@ Example with configuration:
       "command": "npx",
       "args": ["-y", "bear-notes-mcp@latest"],
       "env": {
-        "UI_ENABLE_NEW_NOTE_CONVENTION": "true",
+        "UI_ENABLE_CHORUS_CONVENTIONS": "true",
         "UI_ENABLE_CONTENT_REPLACEMENT": "true",
         "UI_DEBUG_TOGGLE": "true"
       }

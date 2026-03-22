@@ -2,7 +2,7 @@
   "mcpServers": {
     "bear-notes-project-local": {
       "env": {
-        "UI_ENABLE_NEW_NOTE_CONVENTION": "true",
+        "UI_ENABLE_CHORUS_CONVENTIONS": "true",
         "UI_ENABLE_CONTENT_REPLACEMENT": "true"
       },
       "command": "npx",

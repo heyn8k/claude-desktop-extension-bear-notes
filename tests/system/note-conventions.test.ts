@@ -62,7 +62,7 @@ describe('note conventions via MCP Inspector CLI', () => {
       callTool({
         toolName: 'bear-create-note',
         args: { title, text: FIXTURE_TEXT, tags: 'system-test,system test/system test spaces' },
-        env: { UI_ENABLE_NEW_NOTE_CONVENTION: 'true' },
+        env: { UI_ENABLE_CHORUS_CONVENTIONS: 'true' },
       });
 
       noteId = findNoteId(title);
@@ -91,7 +91,7 @@ describe('note conventions via MCP Inspector CLI', () => {
       callTool({
         toolName: 'bear-create-note',
         args: { title, tags: 'system-test' },
-        env: { UI_ENABLE_NEW_NOTE_CONVENTION: 'true' },
+        env: { UI_ENABLE_CHORUS_CONVENTIONS: 'true' },
       });
 
       noteId = findNoteId(title);
@@ -120,7 +120,7 @@ describe('note conventions via MCP Inspector CLI', () => {
       callTool({
         toolName: 'bear-create-note',
         args: { title, text: FIXTURE_TEXT },
-        env: { UI_ENABLE_NEW_NOTE_CONVENTION: 'true' },
+        env: { UI_ENABLE_CHORUS_CONVENTIONS: 'true' },
       });
 
       noteId = findNoteId(title);
