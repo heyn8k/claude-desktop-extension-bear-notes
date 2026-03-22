@@ -340,30 +340,25 @@ export function spliceSection(fullBody: string, header: string, newContent: stri
   const cleanHeader = header.replace(/^#+\s*/, '');
   const lines = fullBody.split('\n');
 
-  // Find the target header and its level
+  // Find the target header
   let targetIndex = -1;
-  let targetLevel = 0;
 
   for (let i = 0; i < lines.length; i++) {
-    const match = lines[i].match(/^(#{1,6})\s+(.+?)\s*$/);
-    if (match && match[2].toLowerCase() === cleanHeader.toLowerCase()) {
+    const match = lines[i].match(/^#{1,6}\s+(.+?)\s*$/);
+    if (match && match[1].toLowerCase() === cleanHeader.toLowerCase()) {
       targetIndex = i;
-      targetLevel = match[1].length;
       break;
     }
   }
 
   if (targetIndex === -1) return fullBody;
 
-  // Find the end of this section.
-  // H1 is the document title — its "section" is the intro before the first sub-header,
-  // so any subsequent header (H2+) marks the boundary. For other levels, stop at
-  // same-or-higher-level headers as standard markdown section semantics.
-  const sectionEndLevel = targetLevel === 1 ? 6 : targetLevel;
+  // Find the end of the DIRECT content under this header — stop at the next
+  // header of any level. Sub-headers mark the inner boundary, same/higher
+  // headers mark sibling/parent boundaries. Both end the direct prose.
   let endIndex = lines.length;
   for (let i = targetIndex + 1; i < lines.length; i++) {
-    const match = lines[i].match(/^(#{1,6})\s+/);
-    if (match && match[1].length <= sectionEndLevel) {
+    if (/^#{1,6}\s+/.test(lines[i])) {
       endIndex = i;
       break;
     }

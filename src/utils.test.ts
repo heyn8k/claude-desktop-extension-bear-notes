@@ -213,6 +213,33 @@ describe('spliceSection', () => {
     expect(result).toContain('Updated.');
     expect(result).not.toContain('More details here.');
   });
+
+  it('preserves sub-sections when replacing parent header', () => {
+    const noteWithSubs = [
+      '## Execution Model',
+      'Original body text.',
+      '',
+      '### Progress tracking',
+      'Tracking content.',
+      '',
+      '### Services',
+      'Service details.',
+      '',
+      '## Other Section',
+      'Other content.',
+    ].join('\n');
+
+    const result = spliceSection(noteWithSubs, 'Execution Model', 'New body text.');
+
+    expect(result).toContain('## Execution Model');
+    expect(result).toContain('New body text.');
+    expect(result).not.toContain('Original body text.');
+    // Sub-sections preserved
+    expect(result).toContain('### Progress tracking');
+    expect(result).toContain('Tracking content.');
+    expect(result).toContain('### Services');
+    expect(result).toContain('## Other Section');
+  });
 });
 
 describe('stripTrailingTags', () => {

@@ -14,6 +14,7 @@ import {
   createToolResponse,
   handleNoteTextUpdate,
   logger,
+  stripLeadingHeader,
   verifyNoteAfterWrite,
 } from './utils.js';
 import {
@@ -951,6 +952,13 @@ server.registerTool(
 
         const bodyWithTags = appendTagsToBody(text, preWriteTags);
 
+        // Skip the write if content is already identical (idempotent no-op)
+        if (bodyWithTags === preWriteText) {
+          return createToolResponse(
+            `Note already matches the provided content.\n\nNote ID: ${resolvedId}\nTitle: "${existingNote.title}"`
+          );
+        }
+
         const url = buildBearUrl('add-text', {
           id: resolvedId,
           text: bodyWithTags,
@@ -976,13 +984,16 @@ server.registerTool(
           `Note replaced and verified.\n\nNote ID: ${resolvedId}\nTitle: "${updatedNote?.title}"\n\n---\n\n${noteBody}`
         );
       } else {
-        // Create new note — pass title explicitly so Bear's ZTITLE matches our poll
+        // Create new note — pass title explicitly so Bear's ZTITLE matches our poll.
+        // Strip leading H1 from body when title is provided to prevent Bear doubling
+        // it (Bear adds title as H1 AND keeps it in the body text).
         const h1Match = text.match(/^#\s+(.+?)\s*$/m);
         const noteTitle = title || h1Match?.[1];
+        const bodyForCreate = noteTitle ? stripLeadingHeader(text, noteTitle) : text;
 
         const { text: createText, tags: createTags } = ENABLE_NEW_NOTE_CONVENTIONS
-          ? applyNoteConventions({ text, tags })
-          : { text, tags };
+          ? applyNoteConventions({ text: bodyForCreate, tags })
+          : { text: bodyForCreate, tags };
 
         const url = buildBearUrl('create', {
           title: noteTitle,
