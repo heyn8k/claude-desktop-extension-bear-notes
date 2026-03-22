@@ -1,7 +1,7 @@
 {
-  "name": "bear-notes-mcp",
+  "name": "bear-notes-chorus",
   "version": "3.1.0",
-  "description": "Bear Notes MCP server with TypeScript and native SQLite",
+  "description": "Bear Notes MCP with read-after-write verification, tag preservation, and Chorus conventions.",
   "type": "module",
   "main": "dist/main.js",
   "scripts": {
@@ -52,10 +52,15 @@
     "mcp"
   ],
   "author": {
-    "name": "Serhii Vasylenko",
-    "email": "serhii@vasylenko.info",
-    "url": "https://devdosvid.blog"
+    "name": "N8K",
+    "url": "https://github.com/heyn8k"
   },
+  "contributors": [
+    {
+      "name": "Serhii Vasylenko",
+      "url": "https://github.com/vasylenko"
+    }
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
