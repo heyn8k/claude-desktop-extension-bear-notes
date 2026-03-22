@@ -157,12 +157,18 @@ server.registerTool(
         ? applyChorusConventions({ text, tags, title })
         : { text, tags };
 
-      const url = buildBearUrl('create', { title, text: createText, tags: createTags });
+      // When Chorus conventions are on, the H1 is already in createText — don't also
+      // pass title to Bear or it adds a second H1 above the body.
+      const url = buildBearUrl('create', {
+        title: ENABLE_CHORUS_CONVENTIONS ? undefined : title,
+        text: createText,
+        tags: createTags,
+      });
 
       await executeBearXCallbackApi(url);
 
-      // Poll for the note ID, then read back to verify
-      const h1Match = text?.match(/^#\s+(.+?)\s*$/m);
+      // Poll for the note ID — extract from conventions output if needed
+      const h1Match = createText?.match(/^#\s+(.+?)\s*$/m);
       const pollTitle = title || h1Match?.[1];
       const createdNoteId = pollTitle ? await awaitNoteCreation(pollTitle) : undefined;
 
@@ -1006,7 +1012,7 @@ server.registerTool(
           : { text: bodyForCreate, tags };
 
         const url = buildBearUrl('create', {
-          title: noteTitle,
+          title: ENABLE_CHORUS_CONVENTIONS ? undefined : noteTitle,
           text: createText,
           tags: createTags,
         });
