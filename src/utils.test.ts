@@ -7,6 +7,7 @@ import {
   parseDateString,
   spliceSection,
   stripLeadingHeader,
+  stripTrailingTags,
 } from './utils.js';
 
 describe('parseDateString', () => {
@@ -208,6 +209,33 @@ describe('spliceSection', () => {
   });
 });
 
+describe('stripTrailingTags', () => {
+  it('strips trailing tag lines', () => {
+    const body = 'Content here.\n\n#chorus #chorus/craft';
+    expect(stripTrailingTags(body)).toBe('Content here.');
+  });
+
+  it('strips trailing tags with blank lines after', () => {
+    const body = 'Content here.\n\n#chorus #chorus/craft\n\n';
+    expect(stripTrailingTags(body)).toBe('Content here.');
+  });
+
+  it('preserves inline tags mid-document', () => {
+    const body = 'Content #chorus here.\n\nMore content.';
+    expect(stripTrailingTags(body)).toBe('Content #chorus here.\n\nMore content.');
+  });
+
+  it('returns body unchanged when no trailing tags', () => {
+    const body = 'Just content.';
+    expect(stripTrailingTags(body)).toBe('Just content.');
+  });
+
+  it('handles multi-word tags with closing hash', () => {
+    const body = 'Content.\n\n#my tag#';
+    expect(stripTrailingTags(body)).toBe('Content.');
+  });
+});
+
 describe('appendTagsToBody', () => {
   it('appends tags as inline Bear syntax at end of body', () => {
     const result = appendTagsToBody('Note content here.', ['chorus/questions', 'science']);
@@ -231,5 +259,19 @@ describe('appendTagsToBody', () => {
     const result = appendTagsToBody('Body.', ['chorus']);
 
     expect(result).toBe('Body.\n\n#chorus');
+  });
+
+  it('does not double tags when body already has them', () => {
+    const body = 'Content here.\n\n#chorus #chorus/craft';
+    const result = appendTagsToBody(body, ['chorus', 'chorus/craft']);
+
+    expect(result).toBe('Content here.\n\n#chorus #chorus/craft');
+  });
+
+  it('replaces old tags with new set when different', () => {
+    const body = 'Content here.\n\n#chorus #old-tag';
+    const result = appendTagsToBody(body, ['chorus', 'chorus/craft']);
+
+    expect(result).toBe('Content here.\n\n#chorus #chorus/craft');
   });
 });

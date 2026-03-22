@@ -282,11 +282,44 @@ export async function verifyNoteAfterWrite(
 }
 
 /**
+ * Checks whether a line is a Bear inline tag line (not a markdown header).
+ * Bear tags: #tag, #nested/tag, #multi word tag# — always # then non-space.
+ * Markdown headers: # Title — always # then space.
+ */
+function isTagOnlyLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  return trimmed.startsWith('#') && trimmed.length > 1 && trimmed[1] !== ' ';
+}
+
+/**
+ * Strips trailing inline tag lines from a note body.
+ * spliceSection() preserves trailing tags for non-last sections, so we strip
+ * before re-appending to avoid doubling.
+ */
+export function stripTrailingTags(body: string): string {
+  const lines = body.split('\n');
+
+  while (lines.length > 0) {
+    const last = lines[lines.length - 1].trim();
+    if (last === '' || isTagOnlyLine(last)) {
+      lines.pop();
+    } else {
+      break;
+    }
+  }
+
+  return lines.join('\n');
+}
+
+/**
  * Converts tag names to Bear inline syntax and appends them to body text.
- * Used during full-body replace to prevent tag wipe from Bear's dual-storage model.
+ * Strips any existing trailing tag lines first to prevent doubling.
  */
 export function appendTagsToBody(body: string, tags: string[]): string {
   if (tags.length === 0) return body;
+
+  const stripped = stripTrailingTags(body);
 
   const tagLine = tags
     .map((t) => {
@@ -295,7 +328,7 @@ export function appendTagsToBody(body: string, tags: string[]): string {
     })
     .join(' ');
 
-  return `${body}\n\n${tagLine}`;
+  return `${stripped}\n\n${tagLine}`;
 }
 
 /**
