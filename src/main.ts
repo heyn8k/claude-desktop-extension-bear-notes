@@ -628,7 +628,7 @@ server.registerTool(
   {
     title: 'Add Tags to Note',
     description:
-      'Add one or more tags to an existing Bear note. Tags are added at the beginning of the note. Use bear-list-tags to see available tags.',
+      'Add one or more tags to an existing Bear note. Tags are appended at the end of the note body to preserve frontmatter and title. Use bear-list-tags to see available tags.',
     inputSchema: {
       id: z
         .string()
@@ -653,17 +653,29 @@ server.registerTool(
     try {
       const existingNote = getNoteContent(id);
       if (!existingNote) {
-        return createToolResponse(`Note with ID '${id}' not found. The note may have been deleted, archived, or the ID may be incorrect.
-
-Use bear-search-notes to find the correct note identifier.`);
+        return createToolResponse(
+          `Note with ID '${id}' not found. The note may have been deleted, archived, or the ID may be incorrect.\n\nUse bear-search-notes to find the correct note identifier.`
+        );
       }
 
-      const tagsString = tags.join(',');
+      if (!existingNote.text) {
+        return createToolResponse(
+          `Note "${existingNote.title}" has no body text. Use bear-add-text to add content first.`
+        );
+      }
+
+      // Snapshot for verification
+      const preWriteText = existingNote.text;
+      const preWriteTags = getNoteTags(id);
+
+      // Append new tag text at the end of the body to preserve frontmatter and title.
+      // Bear's native add-tag prepends #tag above everything, corrupting YAML notes.
+      const bodyWithNewTags = appendTagsToBody(existingNote.text, tags);
 
       const url = buildBearUrl('add-text', {
         id,
-        tags: tagsString,
-        mode: 'prepend',
+        text: bodyWithNewTags,
+        mode: 'replace_all',
         open_note: 'no',
         show_window: 'no',
         new_window: 'no',
@@ -671,14 +683,22 @@ Use bear-search-notes to find the correct note identifier.`);
 
       await executeBearXCallbackApi(url);
 
+      // Verify — expect all old tags plus the new ones
+      const allExpectedTags = [...preWriteTags, ...tags.map((t) => t.toLowerCase())];
+      const verification = await verifyNoteAfterWrite(id, preWriteText, allExpectedTags);
+
       const tagList = tags.map((t) => `#${t}`).join(', ');
 
-      return createToolResponse(`Tags added successfully!
+      if (!verification.success) {
+        const failureDetails = verification.failures.map((f) => `- ${f.message}`).join('\n');
+        return createToolResponse(
+          `Tag add verification FAILED for note "${existingNote.title}".\n\n${failureDetails}\n\nNote ID: ${id}`
+        );
+      }
 
-Note: "${existingNote.title}"
-Tags: ${tagList}
-
-The tags have been added to the beginning of the note.`);
+      return createToolResponse(
+        `Tags added (verified).\n\nNote: "${existingNote.title}"\nTags: ${tagList}\nNote ID: ${id}`
+      );
     } catch (error) {
       logger.error('bear-add-tag failed:', error);
       throw error;
