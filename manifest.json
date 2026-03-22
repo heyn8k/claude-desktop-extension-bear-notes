@@ -25,20 +25,12 @@
         "${__dirname}/main.js"
       ],
       "env": {
-        "UI_DEBUG_TOGGLE": "${user_config.debug}",
         "UI_ENABLE_CHORUS_CONVENTIONS": "${user_config.enable_chorus_conventions}",
         "UI_ENABLE_CONTENT_REPLACEMENT": "${user_config.enable_content_replacement}"
       }
     }
   },
   "user_config": {
-    "debug": {
-      "type": "boolean",
-      "title": "Debug Logging",
-      "description": "Enable debug logging for troubleshooting",
-      "default": false,
-      "required": false
-    },
     "enable_chorus_conventions": {
       "type": "boolean",
       "title": "Chorus Conventions",

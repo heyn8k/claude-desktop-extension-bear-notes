@@ -183,8 +183,12 @@ server.registerTool(
         return createToolResponse(responseLines.join('\n'));
       }
 
-      // Fallback: couldn't retrieve ID but the create was dispatched
-      const responseLines: string[] = ['Note created.', ''];
+      // Fallback: create was dispatched but ID not recoverable for verification
+      const responseLines: string[] = [
+        'Note created (unverified — could not recover note ID).',
+        'Use bear-search-notes to confirm.',
+        '',
+      ];
       if (title) responseLines.push(`Title: "${title}"`);
       if (tags) responseLines.push(`Tags: ${tags}`);
       return createToolResponse(responseLines.join('\n'));
@@ -473,19 +477,37 @@ server.registerTool(
       // base64 CLI adds line breaks that break URL encoding
       const cleanedBase64 = cleanBase64(base64_content);
 
-      // Fail fast with helpful message rather than cryptic Bear error
+      // Resolve to an ID for both validation and verification
+      let resolvedId = id;
+
       if (id) {
         const existingNote = getNoteContent(id);
         if (!existingNote) {
-          return createToolResponse(`Note with ID '${id}' not found. The note may have been deleted, archived, or the ID may be incorrect.
-
-Use bear-search-notes to find the correct note identifier.`);
+          return createToolResponse(
+            `Note with ID '${id}' not found.\n\nUse bear-search-notes to find the correct identifier.`
+          );
         }
+      } else if (title) {
+        // Pre-resolve title to ID using the same pattern as bear-upsert-note
+        const { notes } = searchNotes(title, undefined, 10_000);
+        const exactMatches = notes.filter((n) => n.title.toLowerCase() === title.toLowerCase());
+
+        if (exactMatches.length === 1) {
+          resolvedId = exactMatches[0].identifier;
+        } else if (exactMatches.length > 1) {
+          const matchList = exactMatches
+            .map((n) => `- "${n.title}" (ID: ${n.identifier})`)
+            .join('\n');
+          return createToolResponse(
+            `Multiple notes match title "${title}". Specify by ID:\n\n${matchList}`
+          );
+        }
+        // If zero matches, let Bear try the title path — it may still work
       }
 
       const url = buildBearUrl('add-file', {
-        id,
-        title,
+        id: resolvedId,
+        title: resolvedId ? undefined : title,
         file: cleanedBase64,
         filename,
         mode: 'append',
@@ -493,25 +515,27 @@ Use bear-search-notes to find the correct note identifier.`);
 
       await executeBearXCallbackApi(url);
 
-      const noteIdentifier = id ? `Note ID: ${id}` : `Note title: "${title!}"`;
+      const noteIdentifier = resolvedId ? `Note ID: ${resolvedId}` : `Note title: "${title!}"`;
 
-      // Verify the file attachment landed in SQLite (only when we have the note ID)
-      if (id) {
+      // Verify the file attachment via SQLite when we have an ID
+      if (resolvedId) {
         const deadline = Date.now() + 2_000;
 
         while (Date.now() < deadline) {
-          if (noteFileExists(id, filename)) {
+          if (noteFileExists(resolvedId, filename)) {
             return createToolResponse(`File "${filename}" added (verified).\n\n${noteIdentifier}`);
           }
           await wait(25);
         }
 
         return createToolResponse(
-          `File add command sent but verification failed — "${filename}" not yet confirmed in database.\n\n${noteIdentifier}\nCheck Bear manually.`
+          `File add sent but verification failed — "${filename}" not yet in database.\n\n${noteIdentifier}\nCheck Bear manually.`
         );
       }
 
-      return createToolResponse(`File "${filename}" added.\n\n${noteIdentifier}`);
+      return createToolResponse(
+        `File "${filename}" added (unverified — could not resolve note ID).\n\n${noteIdentifier}`
+      );
     } catch (error) {
       logger.error('bear-add-file failed:', error);
       throw error;
@@ -1066,7 +1090,7 @@ server.registerTool(
         }
 
         return createToolResponse(
-          'Note created, but could not retrieve its ID for verification. Use bear-search-notes to find it.'
+          'Note created (unverified — could not recover note ID). Use bear-search-notes to confirm.'
         );
       }
     } catch (error) {
