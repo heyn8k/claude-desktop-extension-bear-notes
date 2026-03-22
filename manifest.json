@@ -5,20 +5,17 @@
   "version": "3.0.0",
   "icon": "icon.png",
   "screenshots": ["screenshots/search-demo.png"],
-  "description": "Bear Notes MCP server with TypeScript and native SQLite. Provides comprehensive Bear Notes integration for creating, searching, reading, and modifying notes.",
-  "long_description": "This extension provides comprehensive Bear Notes integration through a TypeScript MCP server using native Node.js SQLite. It enables creating, searching, reading, and modifying Bear notes directly from Claude Desktop with full type safety and modern JavaScript features.",
+  "description": "Bear Notes MCP with read-after-write verification. Fork with verified writes, tag preservation, and upsert support.",
+  "long_description": "Chorus fork of the Bear Notes MCP. Adds read-after-write verification to catch silent failures, tag preservation on body replace, H1 section splice fix, bear-upsert-note, and bear-trash-note. Based on vasylenko/claude-desktop-extension-bear-notes (MIT).",
   "author": {
-    "name": "Serhii Vasylenko",
-    "email": "serhii@vasylenko.info",
-    "url": "https://github.com/vasylenko"
+    "name": "N8K",
+    "url": "https://github.com/heyn8k"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vasylenko/claude-desktop-extension-bear-notes"
-  },  
-  "homepage": "https://github.com/vasylenko/claude-desktop-extension-bear-notes",
-  "documentation": "https://github.com/vasylenko/claude-desktop-extension-bear-notes/blob/main/README.md",
-  "support": "https://github.com/vasylenko/claude-desktop-extension-bear-notes/issues",
+    "url": "https://github.com/heyn8k/claude-desktop-extension-bear-notes"
+  },
+  "homepage": "https://github.com/heyn8k/claude-desktop-extension-bear-notes",
   "server": {
     "type": "node",
     "entry_point": "main.js",
