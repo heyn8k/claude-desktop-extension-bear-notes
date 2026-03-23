@@ -426,7 +426,11 @@ Check the note content with bear-open-note to see available sections.`);
         bearMode = 'replace_all';
         bearHeader = undefined;
       } else if (!header) {
-        // Full-body replace: use replace_all with tag preservation
+        // Full-body replace: use replace_all with tag preservation.
+        // replace_all replaces the entire ZTEXT including the title heading,
+        // so we must re-prepend it — stripLeadingHeader already removed any
+        // duplicate the AI included, and replace_all won't preserve it for us.
+        cleanText = `# ${existingNote.title}\n\n${cleanText}`;
         cleanText = appendTagsToBody(cleanText, preWriteTags);
         bearMode = 'replace_all';
       }

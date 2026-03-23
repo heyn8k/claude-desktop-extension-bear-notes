@@ -74,10 +74,11 @@ describe('note conventions via MCP Inspector CLI', () => {
 
       const noteBody = extractNoteBody(openResult);
 
-      // Verify structure: tag line → separator → fixture content (in that order)
-      expect(noteBody).toMatch(
-        /#system-test #system test\/system test spaces#\n---\n[\s\S]*retention is set to 15 days/
-      );
+      // Chorus conventions: YAML frontmatter at top, inline tags at bottom, fixture content in body
+      expect(noteBody).toContain('---\ntype:');
+      expect(noteBody).toContain('tags: [system-test, system test/system test spaces]');
+      expect(noteBody).toContain('retention is set to 15 days');
+      expect(noteBody).toContain('#system-test');
     } finally {
       if (noteId) trashNote(noteId);
     }
@@ -103,10 +104,10 @@ describe('note conventions via MCP Inspector CLI', () => {
 
       const noteBody = extractNoteBody(openResult);
 
-      // Just the tag line, no separator (no text body to separate from)
+      // Chorus conventions: YAML frontmatter present even with no text body
+      expect(noteBody).toContain('---\ntype:');
+      expect(noteBody).toContain('tags: [system-test]');
       expect(noteBody).toContain('#system-test');
-      // No separator since there's no text content
-      expect(noteBody).not.toContain('---\n');
     } finally {
       if (noteId) trashNote(noteId);
     }
