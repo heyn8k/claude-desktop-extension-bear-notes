@@ -1,0 +1,7 @@
+node_modules/
+dist/
+tmp/
+.git/
+*.mcpb
+*.dxt
+.DS_Store
