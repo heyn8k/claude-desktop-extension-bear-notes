@@ -47,7 +47,8 @@ describe('bear-rename-tag via MCP Inspector CLI', () => {
       args: { name: TAG_ORIGINAL, new_name: TAG_RENAMED },
     }).content[0].text;
 
-    expect(result).toContain('renamed successfully');
+    expect(result).toContain('renamed');
+    expect(result).toContain('state confirmed');
 
     await sleep(PAUSE_AFTER_WRITE_OP);
 
@@ -91,7 +92,8 @@ describe('bear-delete-tag via MCP Inspector CLI', () => {
       args: { name: TAG_TO_DELETE },
     }).content[0].text;
 
-    expect(result).toContain('deleted successfully');
+    expect(result).toContain('deleted');
+    expect(result).toContain('state confirmed');
 
     await sleep(PAUSE_AFTER_WRITE_OP);
 
@@ -138,7 +140,8 @@ describe('hierarchical tag rename via MCP Inspector CLI', () => {
       args: { name: TAG_NESTED_ORIGINAL, new_name: TAG_NESTED_RENAMED },
     }).content[0].text;
 
-    expect(result).toContain('renamed successfully');
+    expect(result).toContain('renamed');
+    expect(result).toContain('state confirmed');
 
     await sleep(PAUSE_AFTER_WRITE_OP);
 
@@ -177,7 +180,8 @@ describe('hierarchical tag delete via MCP Inspector CLI', () => {
       args: { name: TAG_NESTED_TO_DELETE },
     }).content[0].text;
 
-    expect(result).toContain('deleted successfully');
+    expect(result).toContain('deleted');
+    expect(result).toContain('state confirmed');
 
     await sleep(PAUSE_AFTER_WRITE_OP);
 
