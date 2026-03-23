@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "bear-notes-chorus",
   "display_name": "Bear Notes Chorus",
-  "version": "26.03.23",
+  "version": "26.03.23.1",
   "icon": "icon.png",
   "description": "Bear Notes MCP fork for Chorus workflows, with note conventions, tag preservation, and upsert support.",
   "long_description": "Personal Chorus-oriented fork of the Bear Notes MCP. Includes Chorus note conventions, tag-preserving full-body replace behavior, H1 section splice handling, bear-upsert-note, bear-trash-note, and bear-get-tags. Based on vasylenko/claude-desktop-extension-bear-notes under MIT.",

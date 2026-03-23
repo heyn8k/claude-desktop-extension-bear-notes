@@ -1,6 +1,6 @@
 {
   "name": "bear-notes-chorus",
-  "version": "26.03.23",
+  "version": "26.03.23.1",
   "description": "Personal Bear Notes MCP fork for Chorus workflows.",
   "type": "module",
   "main": "dist/main.js",
