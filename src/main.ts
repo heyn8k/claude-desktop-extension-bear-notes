@@ -176,7 +176,7 @@ server.registerTool(
 
       if (createdNoteId) {
         const createdNote = getNoteContent(createdNoteId);
-        const responseLines: string[] = ['Note created (verified).', ''];
+        const responseLines: string[] = ['Note created (state confirmed).', ''];
         responseLines.push(`Title: "${createdNote?.title}"`);
         if (tags) responseLines.push(`Tags: ${tags}`);
         responseLines.push(`Note ID: ${createdNoteId}`);
@@ -523,7 +523,7 @@ server.registerTool(
 
         while (Date.now() < deadline) {
           if (noteFileExists(resolvedId, filename)) {
-            return createToolResponse(`File "${filename}" added (verified).\n\n${noteIdentifier}`);
+            return createToolResponse(`File "${filename}" added (state confirmed).\n\n${noteIdentifier}`);
           }
           await wait(25);
         }
@@ -751,7 +751,7 @@ server.registerTool(
       }
 
       return createToolResponse(
-        `Tags added (verified).\n\nNote: "${existingNote.title}"\nTags: ${tagList}\nNote ID: ${id}`
+        `Tags added (state confirmed).\n\nNote: "${existingNote.title}"\nTags: ${tagList}\nNote ID: ${id}`
       );
     } catch (error) {
       logger.error('bear-add-tag failed:', error);
@@ -804,7 +804,7 @@ Use bear-search-notes to find the correct note identifier.`);
       while (Date.now() < deadline) {
         if (isNoteArchived(id) === true) {
           return createToolResponse(
-            `Note archived (verified).\n\nNote: "${existingNote.title}"\nID: ${id}`
+            `Note archived (state confirmed).\n\nNote: "${existingNote.title}"\nID: ${id}`
           );
         }
         await wait(25);
@@ -868,7 +868,7 @@ server.registerTool(
 
       while (Date.now() < deadline) {
         if (!tagExists(name) && tagExists(new_name)) {
-          return createToolResponse(`Tag renamed (verified).\n\nFrom: #${name}\nTo: #${new_name}`);
+          return createToolResponse(`Tag renamed (state confirmed).\n\nFrom: #${name}\nTo: #${new_name}`);
         }
         await wait(25);
       }
@@ -922,7 +922,7 @@ server.registerTool(
 
       while (Date.now() < deadline) {
         if (!tagExists(name)) {
-          return createToolResponse(`Tag deleted (verified).\n\nTag: #${name}`);
+          return createToolResponse(`Tag deleted (state confirmed).\n\nTag: #${name}`);
         }
         await wait(25);
       }
@@ -1058,7 +1058,7 @@ server.registerTool(
         const noteBody = updatedNote?.text ?? '*Could not read note back*';
 
         return createToolResponse(
-          `Note replaced and verified.\n\nNote ID: ${resolvedId}\nTitle: "${updatedNote?.title}"\n\n---\n\n${noteBody}`
+          `Note replaced (state confirmed).\n\nNote ID: ${resolvedId}\nTitle: "${updatedNote?.title}"\n\n---\n\n${noteBody}`
         );
       } else {
         // Create new note — pass title explicitly so Bear's ZTITLE matches our poll.
@@ -1085,7 +1085,7 @@ server.registerTool(
           const createdNote = getNoteContent(createdId);
           const noteBody = createdNote?.text ?? '*Could not read note back*';
           return createToolResponse(
-            `Note created and verified.\n\nNote ID: ${createdId}\nTitle: "${createdNote?.title}"\n\n---\n\n${noteBody}`
+            `Note created (state confirmed).\n\nNote ID: ${createdId}\nTitle: "${createdNote?.title}"\n\n---\n\n${noteBody}`
           );
         }
 
@@ -1145,7 +1145,7 @@ server.registerTool(
         const raw = getNoteRaw(id);
         if (raw?.trashed) {
           return createToolResponse(
-            `Note trashed and verified.\n\nNote: "${existingNote.title}"\nID: ${id}`
+            `Note trashed (state confirmed).\n\nNote: "${existingNote.title}"\nID: ${id}`
           );
         }
         await wait(25);
