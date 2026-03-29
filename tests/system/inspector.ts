@@ -24,7 +24,7 @@ export interface ToolResponse {
  * Each call spawns a fresh server process — no shared state between calls.
  */
 export function callTool({ toolName, args, env }: CallToolOptions): ToolResponse {
-  const cliArgs = ['@modelcontextprotocol/inspector', '--cli'];
+  const cliArgs = ['mcp-inspector', '--cli'];
 
   // Inspector's -e flag passes env vars to the spawned server process
   for (const [key, value] of Object.entries(env ?? {})) {

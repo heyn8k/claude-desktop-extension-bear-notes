@@ -12,7 +12,7 @@ tasks:
   inspector:
     desc: Run MCP inspector with Web UI
     cmds:
-      - pnpm exec @modelcontextprotocol/inspector node dist/main.js
+      - pnpm exec mcp-inspector node dist/main.js
       
   setup:
     desc: Project setup (install + build)
@@ -58,8 +58,9 @@ tasks:
       - task: test:system # In CI, when skipped, this will be considered as success run
       - rm -rf tmp/bundle && mkdir -p tmp/bundle
       - cp -r dist/*.js manifest.json assets/* package.json tmp/bundle/
-      - cd tmp/bundle && pnpm exec mcpb validate manifest.json
-      - cd tmp/bundle && pnpm install --prod    
+      - pnpm exec mcpb validate tmp/bundle/manifest.json
+      - echo 'node-linker=hoisted' > tmp/bundle/.npmrc
+      - cd tmp/bundle && pnpm install --prod
       - pnpm exec mcpb pack tmp/bundle {{.BUNDLE_NAME}}
       - echo "Bundle created {{.BUNDLE_NAME}}"   
     

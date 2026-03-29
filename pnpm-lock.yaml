@@ -24,6 +24,9 @@ importers:
       '@anthropic-ai/mcpb':
         specifier: ^2.1.2
         version: 2.1.2
+      '@eslint/js':
+        specifier: ^9.39.3
+        version: 9.39.3
       '@modelcontextprotocol/inspector':
         specifier: ^0.20.0
         version: 0.20.0(@preact/signals-core@1.13.0)(@types/node@24.10.13)(@types/react@18.3.28)(typescript@5.9.3)
