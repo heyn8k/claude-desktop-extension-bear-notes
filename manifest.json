@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "bear-notes-chorus",
   "display_name": "Chorus Notes Bear",
-  "version": "26.03.23.1",
+  "version": "26.03.28",
   "icon": "icon.png",
   "description": "Chorus Notes for Bear.app — structured writing with verified writes.",
   "long_description": "Bear Notes MCP server with section-level editing, YAML frontmatter conventions, tag preservation, and post-write verification. Part of Chorus Notes.",
